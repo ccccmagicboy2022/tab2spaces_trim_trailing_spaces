@@ -1,0 +1,87 @@
+#===================================================================================
+# Description: Build app tool using GitHub Actions
+# Lisence: MIT
+# Author: cccc
+# Url: 
+#===================================================================================
+
+name: APP_BUILD
+
+on: [workflow_dispatch]
+
+env:
+  TZ: Asia/Shanghai
+  USE_THIS_STEPS: true
+  USE_UPX: true
+
+jobs:
+  build:
+    name: c_c++_code_cleaner
+    runs-on: windows-2016
+
+    steps:
+    - name: Checkout this repos
+      uses: actions/checkout@v2
+      with:
+        ref: dev
+
+    - name: Get the python v3.x
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+        architecture: 'x64'      
+
+    - name: Check python version
+      run: |
+        python -c "import sys; print(sys.version)"
+      shell: cmd
+      
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install -U -r .\src\requirements.txt
+      shell: cmd
+      
+    - name: Build with pyinstaller AND UPX
+      if: env.USE_UPX == 'true'
+      run: |
+        pyinstaller.exe --upx-dir=.\upx-3.95-win64 --icon=.\src\c_c++_code_cleaner.ico -F --noconsole .\src\c_c++_code_cleaner.py --version-file .\src\file_version_info.txt --uac-admin
+        cd dist
+        dir
+        
+    - name: Build with pyinstaller
+      if: env.USE_UPX == 'false'
+      run: |
+        pyinstaller.exe --icon=.\src\c_c++_code_cleaner.ico -F --noconsole .\src\c_c++_code_cleaner.py --version-file .\src\file_version_info.txt --uac-admin
+        cd dist
+        dir        
+        
+    - name: Get the exe version
+      id: get_ver
+      working-directory: .\
+      run: |
+        echo "::set-output name=version::$((Get-Command D:\\a\\tab2spaces_trim_trailing_spaces\\tab2spaces_trim_trailing_spaces\\dist\\c_c++_code_cleaner.exe).FileVersionInfo.FileVersion)"
+      shell: powershell
+      
+    - name: Get the datetime
+      id: get_datetime
+      uses: ccccmagicboy/get_datetime@master
+      with:
+        tz1: 'Asia'
+        tz2: 'Shanghai'           
+
+    - name: Zip the artifact
+      if: env.USE_THIS_STEPS == 'true'
+      run: |
+        7z a c_c++_code_cleaner_v${{ steps.get_ver.outputs.version }}_${{ steps.get_datetime.outputs.datetime_str }}.zip dist\c_c++_code_cleaner.exe
+      shell: cmd
+      
+    - name: Upload the zip file
+      if: env.USE_THIS_STEPS == 'true'    
+      uses: actions/upload-artifact@master
+      with:
+        name: c_c++_code_cleaner_v${{ steps.get_ver.outputs.version }}_${{ steps.get_datetime.outputs.datetime_str }}
+        path: c_c++_code_cleaner_v${{ steps.get_ver.outputs.version }}_${{ steps.get_datetime.outputs.datetime_str }}.zip
+        
+
+
