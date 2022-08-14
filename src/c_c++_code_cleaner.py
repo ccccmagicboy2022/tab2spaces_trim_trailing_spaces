@@ -2,11 +2,12 @@ import os
 from os import path
 import re
 
-ext_set = ['.c', '.h', '.cpp', '.hpp', '.py']
+ext_set = ['.c', '.h', '.cpp', '.hpp']
 replacement_spaces = ' ' * 4
 
 def tab2spaces(url):
     file_contents = ''
+    
     with open(url, 'r', encoding='utf-8') as f:
         file_contents = f.read()
 
@@ -14,16 +15,37 @@ def tab2spaces(url):
 
     with open(url, 'w', encoding='utf-8') as f:
         f.write(file_contents)
-
+        
 def trim_trailing_spaces(url):
-    file_contents = ''
+    line_set = []
+    
     with open(url, 'r', encoding='utf-8') as f:
-        file_contents = f.read()
+        lines = f.readlines()
+    
+    for line in lines:
+        if ('\n' != line or '\r' != line or '\n\r' != line or '\r\n' != line):
+            line = line.rstrip()
+            line += '\n'
+        line_set.append(line)
+        
+    with open(url, 'w', encoding='utf-8') as f:
+        f.writelines(line_set)
+        
+def remove_spaces_line(url):
+    line_set = []
 
-    file_contents = re.sub(r"\s+$", "", file_contents)
+    with open(url, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    for line in lines:
+        c = line.replace(' ', '')
+        if ('\n' == c or '\r' == c or '\n\r' == c or '\r\n' == c):
+            line_set.append(c)
+        else:
+            line_set.append(line)
 
     with open(url, 'w', encoding='utf-8') as f:
-        f.write(file_contents)
+        f.writelines(line_set)
 
 def scan_files(url):
     file = os.listdir(url)
@@ -36,6 +58,7 @@ def scan_files(url):
                     print(real_url)
                     tab2spaces(real_url)
                     trim_trailing_spaces(real_url)
+                    remove_spaces_line(real_url)
         elif path.isdir(real_url):
             scan_files(real_url)
         else:
