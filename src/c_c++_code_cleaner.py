@@ -1,9 +1,9 @@
 import os
 from os import path
 import re
-
-ext_set = ['.c', '.h', '.cpp', '.hpp']
-replacement_spaces = ' ' * 4
+import typer
+from typing import Optional
+from rich.traceback import install
 
 def tab2spaces(url):
     file_contents = ''
@@ -64,4 +64,27 @@ def scan_files(url):
         else:
             pass
 
-scan_files("./")
+ext_set = ['.c', '.h', '.cpp', '.hpp']
+replacement_spaces = ' ' * 4
+__version__ = "1.0.0"
+install()
+
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"Version: v{__version__}")
+        raise typer.Exit()
+
+def path_callback(value: str):
+    typer.secho(f"{value} begin to process===", fg=typer.colors.BRIGHT_WHITE, bg=typer.colors.GREEN)
+    return value
+        
+def main(version: Optional[bool] = typer.Option(None, "--version", '-v', callback=version_callback), path: str = typer.Option("./", '--path', '-p', prompt = "Paste your path of code", help="code path", confirmation_prompt=True, callback=path_callback)):
+    """
+    Simple program that cleanup your c/c++ code with utf-8.
+    """
+    scan_files(path)
+
+if __name__ == '__main__':
+    typer.run(main)
+
+
