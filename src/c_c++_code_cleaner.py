@@ -75,7 +75,7 @@ def scan_files(url):
 
 ext_set = ['.c', '.h', '.cpp', '.hpp', '.py', '.m']
 replacement_spaces = ' ' * 4
-__version__ = "1.0.0"
+__version__ = "1.0.0.2"
 install()
 
 def version_callback(value: bool):
